@@ -1,7 +1,13 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <intrin.h>
-#include <stdio.h>
+#include <iostream>
+
+#include "logger.h"
+namespace Logger
+{
+	Event g_events[BUFFER_SIZE];
+	LONG g_pos = -1;
+}
 
 // Set either of these to 1 to prevent CPU reordering
 #define USE_CPU_FENCE              0
@@ -76,9 +82,11 @@ DWORD WINAPI thread1Func(LPVOID param)
     MersenneTwister random(1);
     for (;;)
     {
+		LOG("wait", 0);
         WaitForSingleObject(beginSema1, INFINITE);  // Wait for signal
         while (random.integer() % 8 != 0) {}  // Random delay
-
+		LOG("X ==", X);
+		if (X != 0) DebugBreak();  // Makeshift assert
         // ----- THE TRANSACTION! -----
         X = 1;
 #if USE_CPU_FENCE
@@ -98,9 +106,11 @@ DWORD WINAPI thread2Func(LPVOID param)
     MersenneTwister random(2);
     for (;;)
     {
+		LOG("wait", 0);
         WaitForSingleObject(beginSema2, INFINITE);  // Wait for signal
         while (random.integer() % 8 != 0) {}  // Random delay
-
+		LOG("Y ==", Y);
+		if (Y != 0) DebugBreak();  // Makeshift assert
         // ----- THE TRANSACTION! -----
         Y = 1;
 #if USE_CPU_FENCE
@@ -138,6 +148,7 @@ int main()
     for (int iterations = 1; ; iterations++)
     {
         // Reset X and Y
+		LOG("reset vars", 0);
         X = 0;
         Y = 0;
         // Signal both threads
@@ -147,10 +158,11 @@ int main()
         WaitForSingleObject(endSema, INFINITE);
         WaitForSingleObject(endSema, INFINITE);
         // Check if there was a simultaneous reorder
+		LOG("check vars", 0);
         if (r1 == 0 && r2 == 0)
         {
             detected++;
-            printf("%d reorders detected after %d iterations\n", detected, iterations);
+			std::cout << detected << " reorders detected after " << iterations << " iterations" << std::endl;
         }
     }
     return 0;  // Never returns

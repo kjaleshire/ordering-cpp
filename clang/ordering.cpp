@@ -175,8 +175,8 @@ int main()
         if (r1 == 0 && r2 == 0)
         {
             detected++;
-            std::cout << detected << " reorders detected after " << iterations << " iterations\n";
-            std::cout << std::endl;
+            std::cout << detected << " reorders detected after " << iterations;
+            std::cout << " iterations\n" << std::endl;
         }
     }
     return 0;  // Never returns
